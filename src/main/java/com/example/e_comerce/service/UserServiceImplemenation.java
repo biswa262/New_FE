@@ -11,13 +11,17 @@ import java.util.Optional;
 
 @Service
 public class UserServiceImplemenation implements UserService{
-    private UserRepository userRepository;
+	
+
+	@Autowired
+	private UserRepository userRepository;
+
     @Autowired
     private JwtProvider jwtProvider;
 
-    public UserServiceImplemenation(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+//    public UserServiceImplemenation(UserRepository userRepository) {
+//        this.userRepository = userRepository;
+//    }
 
     @Override
     public User findUserById(Long userId) throws UserException {
