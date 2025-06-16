@@ -140,12 +140,35 @@ public class ProductServiceImplementation implements  ProductService{
 
     @Override
     public Product updateProduct(Long productId, Product req) throws ProductException {
-        Product product=findProductById(productId);
-
-        if(req.getQuantity()!=0){
-            product.setQuantity(req.getQuantity());
-        }
-        return productRepository.save(product);
+    	Product existingProduct = productRepository.findById(productId)
+    			.orElseThrow(() -> new ProductException("Product with ID " + productId + " not found"));
+ 
+ 
+    			if (req.getTitle() != null) {
+    			existingProduct.setTitle(req.getTitle());
+    			}
+    			if (req.getDescription() != null) {
+    			 existingProduct.setDescription(req.getDescription());
+    			}
+    			 if (req.getPrice() != 0) {
+    			 existingProduct.setPrice(req.getPrice());
+    			}
+    			 if (req.getImageUrl() != null) {
+    			 existingProduct.setImageUrl(req.getImageUrl());
+    			}
+    			 if (req.getDiscountedPrice() != 0) {
+    			 existingProduct.setDiscountedPrice(req.getDiscountedPrice());
+    			}
+    			 if (req.getQuantity() != 0) {
+    			 existingProduct.setQuantity(req.getQuantity());
+    			}
+    			if (req.getSizes() != null) {
+    			 existingProduct.setSizes(req.getSizes());
+    			}
+    			
+ 
+    			 Product savedProduct = productRepository.save(existingProduct);
+    		     return savedProduct;
     }
 
     @Override
