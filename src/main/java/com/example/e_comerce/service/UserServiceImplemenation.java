@@ -4,11 +4,16 @@ import com.example.e_comerce.config.JwtProvider;
 import com.example.e_comerce.exception.UserException;
 import com.example.e_comerce.model.User;
 import com.example.e_comerce.repository.UserRepository;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class UserServiceImplemenation implements UserService{
 	
@@ -18,6 +23,11 @@ public class UserServiceImplemenation implements UserService{
 
     @Autowired
     private JwtProvider jwtProvider;
+    
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
 
 //    public UserServiceImplemenation(UserRepository userRepository) {
 //        this.userRepository = userRepository;
@@ -48,4 +58,42 @@ public class UserServiceImplemenation implements UserService{
         System.out.println("email user"+user.getEmail());
         return user;
     }
+    
+    @Override
+    public User updateUserProfile(String jwt, User updatedUser) throws UserException {
+        String email = jwtProvider.getEmailFromToken(jwt);
+        User existingUser = userRepository.findByEmail(email);
+
+        if (existingUser == null) {
+            throw new UserException("User not found with email: " + email);
+        }
+
+        existingUser.setFirst_name(updatedUser.getFirst_name());
+        existingUser.setLast_name(updatedUser.getLast_name());
+
+        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
+            existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
+        }
+
+        return userRepository.save(existingUser);
+    }
+
+    
+//    @Override
+//    public User updateUserProfile(String jwt, User updatedUser) throws UserException {
+//        String email = jwtProvider.getEmailFromToken(jwt);
+//        User existingUser = userRepository.findByEmail(email);
+//
+//        if (existingUser == null) {
+//            throw new UserException("User not found with email: " + email);
+//        }
+//
+//        // Update fields using correct model field names
+//        existingUser.setFirst_name(updatedUser.getFirst_name());
+//        existingUser.setLast_name(updatedUser.getLast_name());
+//        existingUser.setEmail(updatedUser.getEmail());
+//
+//        return userRepository.save(existingUser);
+//    }
+
 }

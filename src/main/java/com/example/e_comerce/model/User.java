@@ -1,31 +1,54 @@
 package com.example.e_comerce.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.*;
+
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Table(name = "users")
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+
 @Entity
+@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
-    private String first_name;
-    private String last_name;
-    private String password;
-    private String email;
-    private String mobile;
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Long id;
+
+	@NotBlank(message = "First name is required")
+ private String first_name;
+
+ @NotBlank(message = "Last name is required")
+ private String last_name;
+
+@NotBlank(message = "Password is required")
+ @Size(min = 6, message = "Password must be at least 6 characters")
+ private String password;
+
+
+	@NotBlank(message = "Email is required")
+ @Email(message = "Invalid email format")
+ private String email;
+
+	@NotBlank(message = "Mobile number is required")
+ @Pattern(regexp = "^[6-9]\\d{9}$", message = "Invalid mobile number")
+ private String mobile;
+
+
+
 
     // --- REMOVED: role field and its annotations ---
     // Previously:
