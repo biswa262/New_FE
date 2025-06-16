@@ -1,4 +1,3 @@
-// src/main/java/com/example/e_comerce/config/AppConfig.java
 package com.example.e_comerce.config;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,14 +25,11 @@ public class AppConfig {
         http
             .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorize -> authorize
-                // Allow /auth/** (signup, signin) to be publicly accessible
                 .requestMatchers("/auth/**").permitAll()
-                // --- MODIFIED: Removed specific ADMIN role requirement for /api/admin/** ---
-                // Now, all /api/** paths will just require general authentication
-                .requestMatchers("/api/**").authenticated() // All /api/** paths now simply require authentication
-                // --- END MODIFICATION ---
-                // All other requests (not under /auth/ or /api/) are also permitted
-                .anyRequest().permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // MODIFIED LINE BELOW: Allow both ADMIN and USER roles to access general /api/** paths
+                .requestMatchers("/api/**").hasAnyRole("ADMIN", "USER")
+                .anyRequest().permitAll() // Be careful with this; consider if all other requests truly need to be permitted
             )
             .addFilterBefore(new JwtValidator(), BasicAuthenticationFilter.class)
             .csrf(csrf -> csrf.disable())

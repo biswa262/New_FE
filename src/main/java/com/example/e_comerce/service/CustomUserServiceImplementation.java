@@ -3,13 +3,13 @@ package com.example.e_comerce.service;
 import com.example.e_comerce.model.User;
 import com.example.e_comerce.repository.UserRepository;
 import org.springframework.security.core.GrantedAuthority;
-// Removed: import org.springframework.security.core.authority.SimpleGrantedAuthority; // No longer needed if no authorities are added
+import org.springframework.security.core.authority.SimpleGrantedAuthority; // This import is now needed
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList; // Keep if you want an empty list of authorities
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -28,20 +28,15 @@ public class CustomUserServiceImplementation implements UserDetailsService {
             throw new UsernameNotFoundException("User Not Found with email: " + username);
         }
 
-        // --- REMOVED: Role-based authority creation ---
-        // Previously:
-        // List<GrantedAuthority> authorities = new ArrayList<>();
-        // authorities.add(new SimpleGrantedAuthority(user.getRole()));
-        // --- END REMOVAL ---
-
-        // Now, pass an empty list of authorities if no roles are being used.
-        // Spring Security will still allow authentication but won't apply role-based authorization.
+        // Re-implementing role-based authority creation
         List<GrantedAuthority> authorities = new ArrayList<>();
+        // Assuming user.getRole() returns a string like "ROLE_USER" or "ROLE_ADMIN"
+        authorities.add(new SimpleGrantedAuthority(user.getRole()));
 
         return new org.springframework.security.core.userdetails.User(
             user.getEmail(),
             user.getPassword(),
-            authorities // Now an empty list, as roles are removed
+            authorities // Now passing the list with the user's role
         );
     }
 }

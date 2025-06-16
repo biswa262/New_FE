@@ -15,10 +15,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority; // Import this
+import org.springframework.security.core.authority.SimpleGrantedAuthority; // Import this
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList; // Import this
+import java.util.List; // Import this
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -27,92 +32,99 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private JwtProvider jwtProvider;
+    private JwtProvider jwtProvider; //
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
-    private CustomUserServiceImplementation customUserServiceImplementation;
+    private CustomUserServiceImplementation customUserServiceImplementation; //
     @Autowired
-    private CartService cartService;
-
-//    public AuthController(UserRepository userRepository, JwtProvider jwtProvider, PasswordEncoder passwordEncoder, CustomUserServiceImplementation customUserServiceImplementation, CartService cartService) {
-//        this.userRepository = userRepository;
-//        this.jwtProvider = jwtProvider;
-//        this.passwordEncoder = passwordEncoder;
-//        this.customUserServiceImplementation = customUserServiceImplementation;
-//        this.cartService = cartService;
-//    }
+    private CartService cartService; //
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponse>createUserHandler(@RequestBody User user) throws UserException{
-        String email=user.getEmail();
-        String password= user.getPassword();
-        String firstName= user.getFirst_name();
-        String lastName= user.getLast_name();
-        // --- REMOVED: Role handling from signup process ---
-        // Previously:
-        // String role = user.getRole();
-        // if (role == null || role.isEmpty()) {
-        //     role = "ROLE_USER";
-        // } else if (!role.equals("ROLE_USER") && !role.equals("ROLE_ADMIN")) {
-        //     throw new UserException("Invalid role specified. Only 'ROLE_USER' and 'ROLE_ADMIN' are allowed.");
-        // }
-        // --- END REMOVAL ---
+    public ResponseEntity<AuthResponse> createUserHandler(@Valid @RequestBody User user) throws UserException {
+        String email = user.getEmail();
+        String password = user.getPassword();
+        String firstName = user.getFirst_name();
+        String lastName = user.getLast_name();
+        String mobile = user.getMobile();
+        
+        // Get the role string from the request, convert to lowercase for case-insensitive check
+        String clientProvidedRole = user.getRole() != null ? user.getRole().toLowerCase() : null;
+        String internalRole; // This will store "ROLE_USER" or "ROLE_ADMIN"
 
-        User isEmailExist= userRepository.findByEmail(email);
-
-        if (isEmailExist!=null){
-            throw new UserException("Email is already Used with another account");
+        // Check if email already exists
+        User isEmailExist = userRepository.findByEmail(email);
+        if (isEmailExist != null) {
+            throw new UserException("Email is already used with another account");
         }
-        User createdUser= new User();
+
+        // Validate the provided role and convert to internal format
+        if ("user".equals(clientProvidedRole)) {
+            internalRole = "ROLE_USER";
+        } else if ("admin".equals(clientProvidedRole)) {
+            internalRole = "ROLE_ADMIN";
+        } else {
+            throw new UserException("Invalid role specified. Only 'user' or 'admin' are allowed.");
+        }
+
+        User createdUser = new User();
         createdUser.setEmail(email);
         createdUser.setPassword(passwordEncoder.encode(password));
         createdUser.setFirst_name(firstName);
         createdUser.setLast_name(lastName);
-        // --- REMOVED: Setting role on created user ---
-        // Previously: createdUser.setRole(role);
-        // --- END REMOVAL ---
+        createdUser.setMobile(mobile);
+        createdUser.setRole(internalRole); // Set the internally standardized role
 
-        User savedUser= userRepository.save(createdUser);
+        User savedUser = userRepository.save(createdUser);
         cartService.createCart(savedUser);
 
-        // Note: userDetails.getAuthorities() from CustomUserServiceImplementation will now return an empty list
-        Authentication authentication=new UsernamePasswordAuthenticationToken(savedUser.getEmail(),savedUser.getPassword());
+        // --- CHANGES START HERE ---
+        // 1. Create a list of GrantedAuthority objects for the user's role
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority(savedUser.getRole())); // Add the role to authorities
+
+        // 2. Create the UsernamePasswordAuthenticationToken with authorities
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+            savedUser.getEmail(),
+            user.getPassword(), // Use the raw password from the request for initial authentication
+            authorities // Pass the authorities here
+        );
+        // --- CHANGES END HERE ---
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String token= jwtProvider.generateToken(authentication);
+        String token = jwtProvider.generateToken(authentication);
 
-        AuthResponse authResponse= new AuthResponse();
+        AuthResponse authResponse = new AuthResponse();
         authResponse.setJwt(token);
         authResponse.setMessage("SignUp Success");
         return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<AuthResponse>loginUserHandler(@Valid @RequestBody LoginRequest loginRequest){
-        String username=loginRequest.getEmail();
-        String password=loginRequest.getPassword();
+    public ResponseEntity<AuthResponse> loginUserHandler(@Valid @RequestBody LoginRequest loginRequest) { //
+        String username = loginRequest.getEmail();
+        String password = loginRequest.getPassword();
 
-        Authentication authentication =authenticate(username,password);
+        Authentication authentication = authenticate(username, password);
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String token= jwtProvider.generateToken(authentication);
+        String token = jwtProvider.generateToken(authentication);
 
-        AuthResponse authResponse=new AuthResponse();
+        AuthResponse authResponse = new AuthResponse();
         authResponse.setJwt(token);
         authResponse.setMessage("SignIn Success");
-        return new ResponseEntity<AuthResponse>(authResponse,HttpStatus.CREATED);
-
+        return new ResponseEntity<AuthResponse>(authResponse, HttpStatus.CREATED);
     }
 
     private Authentication authenticate(String username, String password) {
-        UserDetails userDetails= customUserServiceImplementation.loadUserByUsername(username);
-        if(userDetails==null){
+        UserDetails userDetails = customUserServiceImplementation.loadUserByUsername(username); //
+        if (userDetails == null) {
             throw new BadCredentialsException("Invalid UserName.....");
         }
-        if (!passwordEncoder.matches(password,userDetails.getPassword())){
+        if (!passwordEncoder.matches(password, userDetails.getPassword())) {
             throw new BadCredentialsException("Invalid Password.....");
-        }else
-        // userDetails.getAuthorities() will now return an empty list of authorities
-        return new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
+        } else
+            // Ensure authorities are passed here from UserDetails, which CustomUserServiceImplementation already does
+            return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 }

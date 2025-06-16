@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import jakarta.validation.constraints.NotBlank; // Added for validation
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,8 +28,12 @@ public class User {
     private String email;
     private String mobile;
 
-    @Column(nullable = false, columnDefinition = "VARCHAR(255) DEFAULT 'ROLE_USER'")
-    private String role; // Re-added the role field
+    // Modified: Mark role as non-blank for validation in DTO context
+    // Removed @Column(columnDefinition="...") so the database doesn't set a default.
+    // The role *must* be provided by the client or handled by the controller logic.
+    @NotBlank(message = "Role is required") // Added validation
+    @Column(nullable = false) // Ensures database constraint
+    private String role;
 
     @OneToMany(mappedBy = "user",cascade = CascadeType.ALL)
     private List<Address> address=new ArrayList<>();
@@ -52,8 +57,7 @@ public class User {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
-        if (role == null) { // Re-added the default role setting
-            role = "ROLE_USER";
-        }
+        // Removed the role defaulting logic from here.
+        // Role is now expected to be provided and validated before persisting.
     }
 }
