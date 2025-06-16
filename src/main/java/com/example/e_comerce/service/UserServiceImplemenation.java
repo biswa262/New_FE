@@ -13,12 +13,15 @@ import java.util.Optional;
 
 @Service
 public class UserServiceImplemenation implements UserService{
+
 	@Autowired
     private UserRepository userRepository;
+
     @Autowired
     private JwtProvider jwtProvider;
     @Autowired
     private PasswordEncoder passwordEncoder;
+
 
 
     @Override
