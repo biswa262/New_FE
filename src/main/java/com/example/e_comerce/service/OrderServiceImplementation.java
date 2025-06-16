@@ -60,7 +60,7 @@ public class OrderServiceImplementation implements OrderService {
 
         createdOrder.setShippingAddress(address);
         createdOrder.setOrderDate(LocalDateTime.now());
-        createdOrder.setOrderStatus(String.valueOf(OrderStatus.PENDINGQ));
+        createdOrder.setOrderStatus(String.valueOf(OrderStatus.PENDING));
         createdOrder.getPaymentDetails().setStatus(String.valueOf(PaymentStatus.PENDING));
         createdOrder.setCreatedAt(LocalDateTime.now());
 
