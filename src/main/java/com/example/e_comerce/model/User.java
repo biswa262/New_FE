@@ -27,11 +27,8 @@ public class User {
     private String email;
     private String mobile;
 
-    // --- REMOVED: role field and its annotations ---
-    // Previously:
-    // @Column(nullable = false, columnDefinition = "VARCHAR(255) DEFAULT 'ROLE_USER'")
-    // private String role;
-    // --- END REMOVAL ---
+    @Column(nullable = false, columnDefinition = "VARCHAR(255) DEFAULT 'ROLE_USER'")
+    private String role; // Re-added the role field
 
     @OneToMany(mappedBy = "user",cascade = CascadeType.ALL)
     private List<Address> address=new ArrayList<>();
@@ -55,18 +52,8 @@ public class User {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
-        // --- REMOVED: Role default setting in PrePersist ---
-        // Previously:
-        // if (role == null) {
-        //     role = "ROLE_USER";
-        // }
-        // --- END REMOVAL ---
+        if (role == null) { // Re-added the default role setting
+            role = "ROLE_USER";
+        }
     }
-
-    // --- REMOVED: Getter and Setter for role field if they were explicitly defined ---
-    // (Assuming Lombok's @Getter/@Setter will now correctly exclude 'role' as it's no longer a field)
-    // If you had:
-    // public String getRole() { return role; }
-    // public void setRole(String role) { this.role = role; }
-    // Those methods should be removed.
 }

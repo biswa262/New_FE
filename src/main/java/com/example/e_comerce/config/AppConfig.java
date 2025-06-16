@@ -1,3 +1,4 @@
+// src/main/java/com/example/e_comerce/config/AppConfig.java
 package com.example.e_comerce.config;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,12 +28,10 @@ public class AppConfig {
             .authorizeHttpRequests(authorize -> authorize
                 // Allow /auth/** (signup, signin) to be publicly accessible
                 .requestMatchers("/auth/**").permitAll()
-                // --- REMOVED ROLE-BASED AUTHORIZATION FOR ADMIN ENDPOINTS ---
-                // Previously: .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // --- MODIFIED: Removed specific ADMIN role requirement for /api/admin/** ---
                 // Now, all /api/** paths will just require general authentication
-                // --- END REMOVAL ---
-                // All /api/** paths require authentication (including former admin paths)
-                .requestMatchers("/api/**").authenticated()
+                .requestMatchers("/api/**").authenticated() // All /api/** paths now simply require authentication
+                // --- END MODIFICATION ---
                 // All other requests (not under /auth/ or /api/) are also permitted
                 .anyRequest().permitAll()
             )

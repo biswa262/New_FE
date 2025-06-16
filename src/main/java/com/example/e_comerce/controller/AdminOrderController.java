@@ -1,3 +1,4 @@
+// src/main/java/com/example/e_comerce/controller/AdminOrderController.java
 package com.example.e_comerce.controller;
 
 import java.util.List;
@@ -16,8 +17,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
-
 @RestController
 @RequestMapping("/api/admin/orders")
 public class AdminOrderController {
@@ -29,9 +28,12 @@ public class AdminOrderController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<List<Order>> getAllOrdersHandler(){
+    public ResponseEntity<List<Order>> getAllOrdersHandler(
+        // --- ADDED: JWT header for consistency as /api/admin/** now requires authentication ---
+        @RequestHeader("Authorization") String jwt) {
         List<Order> orders=orderService.getAllOrders();
-
+        // Even without role-based checks here, Spring Security ensures that
+        // a valid JWT is present because of the .authenticated() rule in AppConfig.
         return new ResponseEntity<>(orders,HttpStatus.ACCEPTED);
     }
 
@@ -58,7 +60,7 @@ public class AdminOrderController {
 
 //    @PutMapping("/{orderId}/cancel")
 //    public ResponseEntity<Order> canceledOrderHandler(@PathVariable Long orderId,
-//                                                      @RequestHeader("Authorization") String jwt) throws OrderException{
+//                                                     @RequestHeader("Authorization") String jwt) throws OrderException{
 //        Order order=orderService.cancledOrder(orderId);
 //        return new ResponseEntity<Order>(order,HttpStatus.ACCEPTED);
 //    }
@@ -71,5 +73,4 @@ public class AdminOrderController {
         System.out.println("delete method working....");
         return new ResponseEntity<>(res,HttpStatus.ACCEPTED);
     }
-
 }
