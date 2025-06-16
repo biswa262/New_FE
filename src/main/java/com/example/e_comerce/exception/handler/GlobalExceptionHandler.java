@@ -1,4 +1,4 @@
-package com.example.e_comerce.exception.handler; // Corrected package name
+package com.example.e_comerce.exception.handler;
 
 import com.example.e_comerce.response.ApiResponse;
 import org.springframework.http.HttpStatus;
@@ -9,11 +9,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
-import java.util.stream.Collectors;//binds all the errors
+
+import java.util.HashMap;
+import java.util.Map;
 
 import com.example.e_comerce.exception.UserException;
 import com.example.e_comerce.exception.ProductException;
-import com.example.e_comerce.exception.OrderException;  
+import com.example.e_comerce.exception.OrderException;
 import com.example.e_comerce.exception.CartItemException;
 
 
@@ -21,17 +23,18 @@ import com.example.e_comerce.exception.CartItemException;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserException.class)
-    public ResponseEntity<ApiResponse> userExceptionHandler(UserException ue, WebRequest req) {
-        System.out.println("GlobalExceptionHandler: Handling UserException - " + ue.getMessage());
-        ApiResponse res = new ApiResponse("[Global Error] " + ue.getMessage(), false);
-        return new ResponseEntity<ApiResponse>(res, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<Map<String, String>> handleUserException(UserException ex) {
+        Map<String, String> error = new HashMap<>();
+        // Modified: Add "[Global Error]" prefix to the message
+        error.put("email", "[Global Error] " + ex.getMessage()); // Keep 'email' as key if that's what you expect
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse> badCredentialsExceptionHandler(BadCredentialsException bce, WebRequest req) {
         System.err.println("GlobalExceptionHandler: Handling BadCredentialsException - " + bce.getMessage());
         ApiResponse res = new ApiResponse("[Global Error] Invalid email or password. Please check your credentials.", false);
-        return new ResponseEntity<ApiResponse>(res, HttpStatus.UNAUTHORIZED); // Fixed 'new new' typo
+        return new ResponseEntity<ApiResponse>(res, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(ProductException.class)
@@ -56,24 +59,13 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse> methodArgumentNotValidExceptionHandler(MethodArgumentNotValidException manve, WebRequest req) {
-        System.err.println("GlobalExceptionHandler: Handling MethodArgumentNotValidException - " + manve.getMessage());
-
-        String errorMessage = manve.getBindingResult().getFieldErrors().stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .collect(Collectors.joining("; "));
-
-        if (errorMessage.isEmpty() && manve.getBindingResult().hasGlobalErrors()) {
-            errorMessage = manve.getBindingResult().getGlobalErrors().stream()
-                    .map(error -> error.getObjectName() + ": " + error.getDefaultMessage())
-                    .collect(Collectors.joining("; "));
-        }
-        if (errorMessage.isEmpty()) {
-            errorMessage = "Validation failed for request body.";
-        }
-
-        ApiResponse res = new ApiResponse("[Global Error] Validation failed: " + errorMessage, false);
-        return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<Map<String, String>> handleValidationErrors(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+            // Modified: Add "[Global Error]" prefix to each validation message
+            errors.put(error.getField(), "[Global Error] " + error.getDefaultMessage())
+        );
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)

@@ -40,6 +40,17 @@ public class AuthController {
     @Autowired
     private CartService cartService; //
 
+
+//    public AuthController(UserRepository userRepository, JwtProvider jwtProvider, PasswordEncoder passwordEncoder, CustomUserServiceImplementation customUserServiceImplementation, CartService cartService) {
+//        this.userRepository = userRepository;
+//        this.jwtProvider = jwtProvider;
+//        this.passwordEncoder = passwordEncoder;
+//        this.customUserServiceImplementation = customUserServiceImplementation;
+//        this.cartService = cartService;
+//    }
+    
+    
+
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> createUserHandler(@Valid @RequestBody User user) throws UserException {
         String email = user.getEmail();
@@ -47,16 +58,19 @@ public class AuthController {
         String firstName = user.getFirst_name();
         String lastName = user.getLast_name();
         String mobile = user.getMobile();
+
         
         // Get the role string from the request, convert to lowercase for case-insensitive check
         String clientProvidedRole = user.getRole() != null ? user.getRole().toLowerCase() : null;
         String internalRole; // This will store "ROLE_USER" or "ROLE_ADMIN"
 
         // Check if email already exists
+
         User isEmailExist = userRepository.findByEmail(email);
         if (isEmailExist != null) {
             throw new UserException("Email is already used with another account");
         }
+
 
         // Validate the provided role and convert to internal format
         if ("user".equals(clientProvidedRole)) {
@@ -67,16 +81,20 @@ public class AuthController {
             throw new UserException("Invalid role specified. Only 'user' or 'admin' are allowed.");
         }
 
+
         User createdUser = new User();
         createdUser.setEmail(email);
         createdUser.setPassword(passwordEncoder.encode(password));
         createdUser.setFirst_name(firstName);
         createdUser.setLast_name(lastName);
         createdUser.setMobile(mobile);
+
         createdUser.setRole(internalRole); // Set the internally standardized role
+
 
         User savedUser = userRepository.save(createdUser);
         cartService.createCart(savedUser);
+
 
         // --- CHANGES START HERE ---
         // 1. Create a list of GrantedAuthority objects for the user's role
@@ -91,6 +109,9 @@ public class AuthController {
         );
         // --- CHANGES END HERE ---
 
+
+      //  Authentication authentication = new UsernamePasswordAuthenticationToken(savedUser.getEmail(), savedUser.getPassword());
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String token = jwtProvider.generateToken(authentication);
@@ -98,8 +119,55 @@ public class AuthController {
         AuthResponse authResponse = new AuthResponse();
         authResponse.setJwt(token);
         authResponse.setMessage("SignUp Success");
+
         return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
     }
+
+
+//    @PostMapping("/signup")
+//    public ResponseEntity<AuthResponse>createUserHandler(@RequestBody User user) throws UserException{
+//        String email=user.getEmail();
+//        String password= user.getPassword();
+//        String firstName= user.getFirst_name();
+//        String lastName= user.getLast_name();
+//        // --- REMOVED: Role handling from signup process ---
+//        // Previously:
+//        // String role = user.getRole();
+//        // if (role == null || role.isEmpty()) {
+//        //     role = "ROLE_USER";
+//        // } else if (!role.equals("ROLE_USER") && !role.equals("ROLE_ADMIN")) {
+//        //     throw new UserException("Invalid role specified. Only 'ROLE_USER' and 'ROLE_ADMIN' are allowed.");
+//        // }
+//        // --- END REMOVAL ---
+//
+//        User isEmailExist= userRepository.findByEmail(email);
+//
+//        if (isEmailExist!=null){
+//            throw new UserException("Email is already Used with another account");
+//        }
+//        User createdUser= new User();
+//        createdUser.setEmail(email);
+//        createdUser.setPassword(passwordEncoder.encode(password));
+//        createdUser.setFirst_name(firstName);
+//        createdUser.setLast_name(lastName);
+//        // --- REMOVED: Setting role on created user ---
+//        // Previously: createdUser.setRole(role);
+//        // --- END REMOVAL ---
+//
+//        User savedUser= userRepository.save(createdUser);
+//        cartService.createCart(savedUser);
+//
+//        // Note: userDetails.getAuthorities() from CustomUserServiceImplementation will now return an empty list
+//        Authentication authentication=new UsernamePasswordAuthenticationToken(savedUser.getEmail(),savedUser.getPassword());
+//        SecurityContextHolder.getContext().setAuthentication(authentication);
+//
+//        String token= jwtProvider.generateToken(authentication);
+//
+//        AuthResponse authResponse= new AuthResponse();
+//        authResponse.setJwt(token);
+//        authResponse.setMessage("SignUp Success");
+//        return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
+//    }
 
     @PostMapping("/signin")
     public ResponseEntity<AuthResponse> loginUserHandler(@Valid @RequestBody LoginRequest loginRequest) { //
