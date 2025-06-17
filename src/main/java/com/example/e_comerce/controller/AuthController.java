@@ -41,14 +41,6 @@ public class AuthController {
     private CartService cartService; //
 
 
-//    public AuthController(UserRepository userRepository, JwtProvider jwtProvider, PasswordEncoder passwordEncoder, CustomUserServiceImplementation customUserServiceImplementation, CartService cartService) {
-//        this.userRepository = userRepository;
-//        this.jwtProvider = jwtProvider;
-//        this.passwordEncoder = passwordEncoder;
-//        this.customUserServiceImplementation = customUserServiceImplementation;
-//        this.cartService = cartService;
-//    }
-    
     
 
     @PostMapping("/signup")
@@ -61,7 +53,7 @@ public class AuthController {
 
         
         // Get the role string from the request, convert to lowercase for case-insensitive check
-        String clientProvidedRole = user.getRole() != null ? user.getRole().toLowerCase() : null;
+        String clientProvidedRole = user.getRole() != null ? user.getRole().toLowerCase() : "user";
         String internalRole; // This will store "ROLE_USER" or "ROLE_ADMIN"
 
         // Check if email already exists

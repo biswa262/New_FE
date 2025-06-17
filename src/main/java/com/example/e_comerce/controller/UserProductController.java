@@ -70,4 +70,11 @@ public class UserProductController {
         List<Product> result = productService.findProductByCategory(name);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
+    
+    @GetMapping("/all")
+    public ResponseEntity<List<Product>> findAllProduct() {
+        List<Product> products = productService.getAllProducts();
+        return new ResponseEntity<List<Product>>(products, HttpStatus.OK);
+    }
+    
 }
